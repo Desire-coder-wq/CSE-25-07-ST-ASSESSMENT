@@ -8,7 +8,7 @@ router.get('/', (req, res) => {
   });
 });
 
-router.get('/login', (req, res) => {
+router.get('/success', (req, res) => {
   res.render('login', { 
     title: 'Login',
     error: null 

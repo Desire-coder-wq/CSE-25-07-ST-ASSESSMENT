@@ -1,56 +1,277 @@
-extends layout
+<!DOCTYPE html>
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Signup
+    link(rel="stylesheet" href="/css/style.css")
+  body
+    div#successAlert.success-alert(style="display: none;")
+      p Account Created Successfully!
 
-block content
-  .form-container
-    .form-header
-      h1 Sign Up
+    .signup-wrapper
+      form.signup-form#signupForm
+        h2 Sign Up
+        
+        input.form-input#fullName(
+          type="text"
+          placeholder="Full Name"
+          name="fullName"
+          required
+        )
+        
+        input.form-input#email(
+          type="email"
+          placeholder="Email"
+          name="email"
+          required
+        )
+        
+        input.form-input#phoneNumber(
+          type="tel"
+          placeholder="Phone Number"
+          name="phoneNumber"
+          required
+        )
+        
+        input.form-input#password(
+          type="password"
+          placeholder="Password"
+          name="password"
+          required
+        )
+        
+        input.form-input#confirmPassword(
+          type="password"
+          placeholder="Confirm Password"
+          name="confirmPassword"
+          required
+        )
+        
+        button.signup-btn(type="submit") Sign Up
+        
+        p.login-prompt
+          | Have an account? 
+          a(href="/") Login
+        script(src="/js/validation.js")
+        script(src="/js/signup.js")  
     
-    form#signupForm.form-body(method="POST", action="/auth/signup")
-      .form-group
-        label(for="email") Email
-        input#email(
-          type="email", 
-          name="email", 
-          placeholder="Enter your email",
-          required
-        )
-        .error-message
+    script.
+      const form = document.getElementById('signupForm');
+      const inputs = document.querySelectorAll('.form-input');
+      const successAlert = document.getElementById('successAlert');
+
+      // Real-time validation
+      inputs.forEach(input => {
+        input.addEventListener('input', () => {
+          if (input.value.trim()) {
+            input.classList.add('valid');
+            input.classList.remove('invalid');
+          }
+        });
+      });
+
+      // Form submission
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        let isValid = true;
+
+        inputs.forEach(input => {
+          if (!input.value.trim()) {
+            input.classList.add('invalid');
+            isValid = false;
+          } else {
+            input.classList.remove('invalid');
+            input.classList.add('valid');
+          }
+        });
+
+        if (!isValid) return;
+
+        try {
+          const response = await fetch('/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fullName: document.getElementById('fullName').value,
+              email: document.getElementById('email').value,
+              phoneNumber: document.getElementById('phoneNumber').value,
+              password: document.getElementById('password').value,
+              confirmPassword: document.getElementById('confirmPassword').value
+            })
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            form.style.display = 'none';
+            successAlert.style.display = 'block';
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 2000);
+          } else {
+            alert(data.message);
+            inputs.forEach(input => input.classList.add('invalid'));
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Signup failed');
+        }
+      });
+      // Real-time validation
+      function validateField(field, type) {
+        const value = field.value.trim();
+        const errorElement = document.getElementById(field.id + 'Error');
+        
+        // Hide error by default
+        errorElement.style.display = 'none';
+        field.classList.remove('error');
+        
+        if (!value) {
+          showFieldError(field, errorElement, 'This field is required');
+          return false;
+        }
+        
+        switch(type) {
+          case 'email':
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+              showFieldError(field, errorElement, 'Please enter a valid email');
+              return false;
+            }
+            break;
+            
+          case 'phone':
+            const phoneRegex = /^[0-9+\-\s()]{10,}$/;
+            if (!phoneRegex.test(value)) {
+              showFieldError(field, errorElement, 'Please enter a valid phone number');
+              return false;
+            }
+            break;
+            
+          case 'password':
+            if (value.length < 6) {
+              showFieldError(field, errorElement, 'Password must be at least 6 characters');
+              return false;
+            }
+            break;
+            
+          case 'confirmPassword':
+            const password = document.getElementById('password').value;
+            if (value !== password) {
+              showFieldError(field, errorElement, 'Passwords do not match');
+              return false;
+            }
+            break;
+        }
+        
+        return true;
+      }
       
-      .form-group
-        label(for="phone") Phone Number
-        input#phone(
-          type="tel", 
-          name="phone", 
-          placeholder="Enter your phone number",
-          required
-        )
-        .error-message
+      function showFieldError(field, errorElement, message) {
+        errorElement.textContent = message;
+        errorElement.style.display = 'block';
+        field.classList.add('error');
+      }
       
-      .form-group
-        label(for="password") Password
-        input#password(
-          type="password", 
-          name="password", 
-          placeholder="Create a password",
-          required
-        )
-        .error-message
+      // Add real-time validation
+      document.addEventListener('DOMContentLoaded', function() {
+        const fields = [
+          { id: 'fullName', type: 'text' },
+          { id: 'email', type: 'email' },
+          { id: 'phoneNumber', type: 'phone' },
+          { id: 'password', type: 'password' },
+          { id: 'confirmPassword', type: 'confirmPassword' }
+        ];
+        
+        fields.forEach(field => {
+          const element = document.getElementById(field.id);
+          element.addEventListener('blur', () => validateField(element, field.type));
+          element.addEventListener('input', () => {
+            const errorElement = document.getElementById(field.id + 'Error');
+            errorElement.style.display = 'none';
+            element.classList.remove('error');
+          });
+        });
+      });
       
-      .form-group
-        label(for="confirmPassword") Confirm Password
-        input#confirmPassword(
-          type="password", 
-          name="confirmPassword", 
-          placeholder="Confirm your password",
-          required
-        )
-        .error-message
+      // Form submission
+      document.getElementById('signupForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Validate all fields
+        const fields = [
+          { element: document.getElementById('fullName'), type: 'text' },
+          { element: document.getElementById('email'), type: 'email' },
+          { element: document.getElementById('phoneNumber'), type: 'phone' },
+          { element: document.getElementById('password'), type: 'password' },
+          { element: document.getElementById('confirmPassword'), type: 'confirmPassword' }
+        ];
+        
+        let isValid = true;
+        fields.forEach(field => {
+          if (!validateField(field.element, field.type)) {
+            isValid = false;
+          }
+        });
+        
+        if (!isValid) return;
+        
+        const formData = new FormData(this);
+        const data = {
+          fullName: formData.get('fullName'),
+          email: formData.get('email'),
+          phoneNumber: formData.get('phoneNumber'),
+          password: formData.get('password'),
+          confirmPassword: formData.get('confirmPassword')
+        };
+
+        // Hide previous messages
+        document.getElementById('successAlert').style.display = 'none';
+        document.getElementById('errorAlert').style.display = 'none';
+
+        try {
+          const response = await fetch('/auth/signup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Show success message at top
+            const successAlert = document.getElementById('successAlert');
+            successAlert.style.display = 'block';
+            successAlert.scrollIntoView({ behavior: 'smooth' });
+            
+            // Clear form
+            this.reset();
+          } else {
+            // Show error messages
+            const errorAlert = document.getElementById('errorAlert');
+            const errorList = document.getElementById('errorList');
+            errorList.innerHTML = '';
+            
+            result.errors.forEach(error => {
+              const li = document.createElement('li');
+              li.textContent = error;
+              errorList.appendChild(li);
+            });
+            
+            errorAlert.style.display = 'block';
+            errorAlert.scrollIntoView({ behavior: 'smooth' });
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          const errorAlert = document.getElementById('errorAlert');
+          const errorList = document.getElementById('errorList');
+          errorList.innerHTML = '<li>An error occurred. Please try again.</li>';
+          errorAlert.style.display = 'block';
+          errorAlert.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
       
-      if error
-        .form-error= error
-      
-      button.signup-btn(type="submit") SIGN UP
-    
-    .form-footer
-      p Already have an account? 
-        a(href="/login") Login

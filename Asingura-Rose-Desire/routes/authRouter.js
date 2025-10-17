@@ -1,106 +1,54 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
 
-// Mock user database (in production, use real database)
-const users = [];
-
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  
-  // Simple validation
-  if (!email || !password) {
-    return res.render('login', { 
-      title: 'Login',
-      error: 'Please fill in all fields' 
-    });
-  }
-
-  // Find user (in production, query database)
-  const user = users.find(u => u.email === email);
-  
-  if (!user) {
-    return res.render('login', { 
-      title: 'Login',
-      error: 'Invalid email or password' 
-    });
-  }
-
-  // Check password
-  const isMatch = await bcrypt.compare(password, user.password);
-  
-  if (!isMatch) {
-    return res.render('login', { 
-      title: 'Login',
-      error: 'Invalid email or password' 
-    });
-  }
-
-  // Set session
-  req.session.user = user;
-  res.render('success', { 
-    title: 'Success',
-    message: 'You have successfully signed into the Refactory system. Feel at home' 
-  });
-});
-
+// Signup Route
 router.post('/signup', async (req, res) => {
-  const { email, phone, password, confirmPassword } = req.body;
-  
-  // Validation
-  if (!email || !phone || !password || !confirmPassword) {
-    return res.render('signup', { 
-      title: 'Sign Up',
-      error: 'Please fill in all fields' 
-    });
+  try {
+    const { fullName, email, phoneNumber, password, confirmPassword } = req.body;
+
+    const errors = [];
+    if (!fullName || !email || !phoneNumber || !password || !confirmPassword)
+      errors.push('Please fill in all fields');
+
+    if (password !== confirmPassword)
+      errors.push('Passwords do not match');
+
+    if (password && password.length < 6)
+      errors.push('Password must be at least 6 characters');
+
+    if (errors.length > 0) return res.status(400).json({ success: false, errors });
+
+    // Check if user exists
+    const existingUser = await User.findOne({ $or: [{ email }, { phoneNumber }] });
+    if (existingUser)
+      return res.status(400).json({ success: false, errors: ['User with this email or phone already exists'] });
+
+    // Hash password and save user
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const newUser = new User({ fullName, email, phoneNumber, password: hashedPassword });
+    await newUser.save();
+
+    return res.json({ success: true, message: 'Account created successfully!' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ success: false, errors: ['Server error'] });
   }
-
-  if (password !== confirmPassword) {
-    return res.render('signup', { 
-      title: 'Sign Up',
-      error: 'Passwords do not match' 
-    });
-  }
-
-  if (password.length < 6) {
-    return res.render('signup', { 
-      title: 'Sign Up',
-      error: 'Password must be at least 6 characters' 
-    });
-  }
-
-  // Check if user exists
-  const existingUser = users.find(u => u.email === email);
-  if (existingUser) {
-    return res.render('signup', { 
-      title: 'Sign Up',
-      error: 'User already exists' 
-    });
-  }
-
-  // Hash password
-  const hashedPassword = await bcrypt.hash(password, 12);
-  
-  // Create user
-  const newUser = {
-    id: Date.now().toString(),
-    email,
-    phone,
-    password: hashedPassword
-  };
-
-  users.push(newUser);
-  
-  res.render('success', { 
-    title: 'Success',
-    message: 'You have successfully created your Refactory account!',
-    showLoginLink: true 
-  });
 });
 
-router.get('/logout', (req, res) => {
-  req.session.destroy();
-  res.redirect('/login');
+// Login Route using Passport Local (configured in config/passport.js)
+router.post('/login', async (req, res, next) => {
+  const passport = req.app.get('passport');
+  passport.authenticate('local', (err, user, info) => {
+    if (err) return res.status(500).json({ success: false, errors: ['Server error'] });
+    if (!user) return res.status(400).json({ success: false, errors: [info.message] });
+
+    req.login(user, err => {
+      if (err) return res.status(500).json({ success: false, errors: ['Login failed'] });
+      return res.json({ success: true, message: 'Login successful' });
+    });
+  })(req, res, next);
 });
 
 module.exports = router;

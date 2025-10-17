@@ -1,13 +1,12 @@
-extends layout
-
-block content
-  .success-container
-    .success-header
-      h1 CONGRATULATIONS!
-    
-    .success-body
-      p.success-message= message
-      
-      if showLoginLink
-        .success-footer
-          a.login-link(href="/login") Go to Login
+doctype html
+html(lang="en")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title Congratulations!
+    link(rel="stylesheet" href="/css/success.css")
+  body
+    .success-wrapper
+      .success-container
+        h1 CONGRATULATIONS!
+        p.success-message You have successfully signed into the Refactory system. Feel at home
