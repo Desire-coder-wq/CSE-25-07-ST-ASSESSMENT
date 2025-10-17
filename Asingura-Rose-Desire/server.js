@@ -1,30 +1,27 @@
-const express = reqiure("express");
+const express = require("express"); 
 const mongoose = require("mongoose");
 const path = require("path");
+const bcrypt = require("bcryptjs");
+const session = require("express-session"); 
 const app = express();
 
-const indexRouter = require('./Asingura-Rose-Desire/routes/index');
+
+const indexRouter = require('./routes/indexRouter');
 const authRouter = require('./routes/authRouter');
 
-//database connection
-
+// Database connection
 mongoose
   .connect("mongodb://127.0.0.1:27017/assessment")
-  .then(() => console.log(" Successfully connected to MongoDB"))
+  .then(() => console.log("Successfully connected to MongoDB"))
   .catch((err) => console.log("MongoDB connection error:", err));
 
-  
-//middleware
+// Middleware
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
 
-
 app.use(express.json());
-
-
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
-
 
 app.use(session({
   secret: 'refactory-secret-key',
@@ -34,12 +31,9 @@ app.use(session({
 }));
 
 // Routes
-
-
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
 
-
-// server
-const PORT = 6000;
-app.listen(PORT, ()=> console.log(`server running on http://localhost:${PORT}`));
+// Server
+const PORT = 5000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
