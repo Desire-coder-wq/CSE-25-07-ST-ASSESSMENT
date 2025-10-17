@@ -1,0 +1,36 @@
+extends layout
+
+block content
+  .form-container
+    .form-header
+      h1 Login
+    
+    form#loginForm.form-body(method="POST", action="/auth/login")
+      .form-group
+        label(for="email") Email or Phone Number
+        input#email(
+          type="text", 
+          name="email", 
+          placeholder="Enter your email or phone number",
+          required
+        )
+        .error-message
+      
+      .form-group
+        label(for="password") Password
+        input#password(
+          type="password", 
+          name="password", 
+          placeholder="Enter your password",
+          required
+        )
+        .error-message
+      
+      if error
+        .form-error= error
+      
+      button.login-btn(type="submit") LOGIN
+    
+    .form-footer
+      p Don't have an account? 
+        a(href="/signup") Signup

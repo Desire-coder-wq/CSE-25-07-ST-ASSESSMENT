@@ -1,0 +1,56 @@
+extends layout
+
+block content
+  .form-container
+    .form-header
+      h1 Sign Up
+    
+    form#signupForm.form-body(method="POST", action="/auth/signup")
+      .form-group
+        label(for="email") Email
+        input#email(
+          type="email", 
+          name="email", 
+          placeholder="Enter your email",
+          required
+        )
+        .error-message
+      
+      .form-group
+        label(for="phone") Phone Number
+        input#phone(
+          type="tel", 
+          name="phone", 
+          placeholder="Enter your phone number",
+          required
+        )
+        .error-message
+      
+      .form-group
+        label(for="password") Password
+        input#password(
+          type="password", 
+          name="password", 
+          placeholder="Create a password",
+          required
+        )
+        .error-message
+      
+      .form-group
+        label(for="confirmPassword") Confirm Password
+        input#confirmPassword(
+          type="password", 
+          name="confirmPassword", 
+          placeholder="Confirm your password",
+          required
+        )
+        .error-message
+      
+      if error
+        .form-error= error
+      
+      button.signup-btn(type="submit") SIGN UP
+    
+    .form-footer
+      p Already have an account? 
+        a(href="/login") Login

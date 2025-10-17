@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  .success-container
+    .success-header
+      h1 CONGRATULATIONS!
+    
+    .success-body
+      p.success-message= message
+      
+      if showLoginLink
+        .success-footer
+          a.login-link(href="/login") Go to Login
